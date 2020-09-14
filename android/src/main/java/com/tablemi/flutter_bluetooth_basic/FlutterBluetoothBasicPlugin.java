@@ -1,6 +1,7 @@
 package com.tablemi.flutter_bluetooth_basic;
 
 import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.EventChannel.EventSink;
@@ -32,9 +34,6 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener;
-import io.flutter.plugin.common.PluginRegistry.RequestPermissionsResultListener;
-import android.app.Activity;
-import androidx.core.app.ActivityCompat;
 
 /** FlutterBluetoothBasicPlugin */
 public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPermissionsResultListener {
@@ -90,21 +89,23 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
                 result.success(threadPool != null);
                 break;
             case "startScan": {
-              if(activity!=null) {
-                if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
-                  ActivityCompat.requestPermissions(
-                          activity,
-                          new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                          REQUEST_COARSE_LOCATION_PERMISSIONS);
-                  pendingCall = call;
-                  pendingResult = result;
-                  break;
+                if (activity != null) {
+                    Log.d(TAG, "asking for permission" +);
+
+                    if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(
+                                activity,
+                                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                REQUEST_COARSE_LOCATION_PERMISSIONS );
+                        pendingCall = call;
+                        pendingResult = result;
+                        break;
+                    }
+                    startScan(call, result);
+                    break;
                 }
-                startScan(call, result);
                 break;
-              }
-              break;
             }
             case "stopScan":
                 stopScan();
@@ -284,6 +285,8 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
 
     @Override
     public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Log.d(TAG, "requestCode" + requestCode);
+
         if (requestCode == REQUEST_COARSE_LOCATION_PERMISSIONS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 startScan(pendingCall, pendingResult);

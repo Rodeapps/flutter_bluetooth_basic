@@ -231,6 +231,12 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
                 @Override
                 public void run() {
                     DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].openPort();
+                    if (!DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].isOpenPort) {
+                        Log.d("PORT", "DISCONNECT FORCED: CAN'T OPEN PORT ");
+                        disconnect();
+
+                        threadPool = null;
+                    }
                 }
             });
             result.success(true);

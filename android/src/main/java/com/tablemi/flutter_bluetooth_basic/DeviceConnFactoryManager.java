@@ -1,5 +1,11 @@
 package com.tablemi.flutter_bluetooth_basic;
 
+import com.gprinter.io.BluetoothPort;
+import com.gprinter.io.EthernetPort;
+import com.gprinter.io.PortManager;
+import com.gprinter.io.SerialPort;
+import com.gprinter.io.UsbPort;
+
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbDevice;
@@ -7,7 +13,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import com.gprinter.io.*;
 
 import java.io.IOException;
 import java.util.Vector;
@@ -41,7 +46,7 @@ public class DeviceConnFactoryManager {
 
     private static DeviceConnFactoryManager[] deviceConnFactoryManagers = new DeviceConnFactoryManager[4];
 
-    private boolean isOpenPort;
+    public boolean isOpenPort;
     /**
      * ESC查询打印机实时状态指令 // ESC query printer real-time status instruction
      */

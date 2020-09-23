@@ -31,7 +31,7 @@
             case CBCentralManagerStateUnauthorized:
             case CBCentralManagerStatePoweredOff:
                 if(instance.stateStreamHandler.sink!= nil) {
-                    //10 - status value for bluetooth poweren on
+                    //10 - status value for bluetooth powered on
                     instance.stateStreamHandler.sink(@10);
                 }
                 break;

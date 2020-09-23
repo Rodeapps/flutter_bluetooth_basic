@@ -279,7 +279,9 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
                         Integer val = bytes.get(i);
                         vectorData.add(Byte.valueOf(Integer.toString(val > 127 ? val - 256 : val)));
                     }
-                    DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].sendDataImmediately(vectorData);
+                    if (DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id] != null) {
+                        DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].sendDataImmediately(vectorData);
+                    }
                 }
             });
         } else {

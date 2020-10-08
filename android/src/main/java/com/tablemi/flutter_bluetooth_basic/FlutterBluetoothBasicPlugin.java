@@ -13,8 +13,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
+import android.os.Build;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -121,10 +127,71 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
             case "writeData":
                 writeData(result, args);
                 break;
+            case "checkLocationServiceStatus": {
+                //Check if location service is turned ON
+                result.success(checkLocationServiceStatus(
+                        context
+                ));
+                break;
+            }
             default:
                 result.notImplemented();
                 break;
         }
+    }
+
+    boolean checkLocationServiceStatus(
+            Context context
+    ) {
+        if (context == null) {
+            return false;
+        }
+        return isLocationServiceEnabled(context);
+    }
+
+    private boolean isLocationServiceEnabled(Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            final LocationManager locationManager = context.getSystemService(LocationManager.class);
+            if (locationManager == null) {
+                return false;
+            }
+            return locationManager.isLocationEnabled();
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            return isLocationServiceEnabledKitKat(context);
+        } else {
+            return isLocationServiceEnablePreKitKat(context);
+        }
+    } // Suppress deprecation warnings since its purpose is to support to be backwards compatible with
+
+    // pre Pie versions of Android.
+    @SuppressWarnings("deprecation")
+    private static boolean isLocationServiceEnabledKitKat(Context context) {
+        if (VERSION.SDK_INT < VERSION_CODES.KITKAT) {
+            return false;
+        }
+        final int locationMode;
+        try {
+            locationMode = Settings.Secure.getInt(
+                    context.getContentResolver(),
+                    Settings.Secure.LOCATION_MODE);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+    }
+
+    // Suppress deprecation warnings since its purpose is to support to be backwards compatible with
+    // pre KitKat versions of Android.
+    @SuppressWarnings("deprecation")
+    private static boolean isLocationServiceEnablePreKitKat(Context context) {
+        if (VERSION.SDK_INT >= VERSION_CODES.KITKAT) {
+            return false;
+        }
+        final String locationProviders = Settings.Secure.getString(
+                context.getContentResolver(),
+                Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+        return !TextUtils.isEmpty(locationProviders);
     }
 
     private void getDevices(Result result) {
@@ -234,7 +301,6 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
                     if (!DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].isOpenPort) {
                         Log.d("PORT", "DISCONNECT FORCED: CAN'T OPEN PORT ");
                         disconnect();
-
                         threadPool = null;
                     }
                 }

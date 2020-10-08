@@ -12,12 +12,13 @@ class BluetoothManager {
   static const int DISCONNECTED = 0;
 
   static const MethodChannel _channel =
-      const MethodChannel('$NAMESPACE/methods');
+  const MethodChannel('$NAMESPACE/methods');
   static const EventChannel _stateChannel =
-      const EventChannel('$NAMESPACE/state');
+  const EventChannel('$NAMESPACE/state');
+
   Stream<MethodCall> get _methodStream => _methodStreamController.stream;
   final StreamController<MethodCall> _methodStreamController =
-      StreamController.broadcast();
+  StreamController.broadcast();
 
   BluetoothManager._() {
     _channel.setMethodCallHandler((MethodCall call) {
@@ -40,10 +41,12 @@ class BluetoothManager {
       await _channel.invokeMethod('isConnected');
 
   BehaviorSubject<bool> _isScanning = BehaviorSubject.seeded(false);
+
   Stream<bool> get isScanning => _isScanning.stream;
 
   BehaviorSubject<List<BluetoothDevice>> _scanResults =
-      BehaviorSubject.seeded([]);
+  BehaviorSubject.seeded([]);
+
   Stream<List<BluetoothDevice>> get scanResults => _scanResults.stream;
 
   PublishSubject _stopScanPill = new PublishSubject();
@@ -122,6 +125,15 @@ class BluetoothManager {
     await _channel.invokeMethod('stopScan');
     _stopScanPill.add(null);
     _isScanning.add(false);
+  }
+
+  /// [ANDROID only] Return location service status
+  Future<bool> loationServiceIsEnabled() async {
+    if (defaultTargetPlatform == TargetPlatform.ios) {
+      return false;
+    }
+
+    return await _channel.invokeMethod('checkLocationServiceStatus');
   }
 
   Future<dynamic> connect(BluetoothDevice device) =>

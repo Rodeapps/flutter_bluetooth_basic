@@ -129,7 +129,7 @@ class BluetoothManager {
 
   /// [ANDROID only] Return location service status
   Future<bool> loationServiceIsEnabled() async {
-    if (defaultTargetPlatform == TargetPlatform.ios) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       return false;
     }
 

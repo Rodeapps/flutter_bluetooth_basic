@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
-
+import 'package:flutter/foundation.dart';
 import 'bluetooth_device.dart';
 
 /// A BluetoothManager.

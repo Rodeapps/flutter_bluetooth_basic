@@ -72,6 +72,10 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
         this.mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         channel.setMethodCallHandler(this);
         stateChannel.setStreamHandler(stateStreamHandler);
+
+        // Register for broadcasts when a device is discovered.
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        activity.registerReceiver(receiver, filter);
     }
 
     @Override
@@ -263,22 +267,42 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
         }
     };
 
-    private void startScan() throws IllegalStateException {
-        BluetoothLeScanner scanner = mBluetoothAdapter.getBluetoothLeScanner();
-        if (scanner == null) {
-            throw new IllegalStateException("getBluetoothLeScanner() is null. Is the Adapter on?");
+    // Create a BroadcastReceiver for ACTION_FOUND.
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Discovery has found a device. Get the BluetoothDevice
+                // object and its info from the Intent.
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                if (device != null && device.getName() != null) {
+                    invokeMethodUIThread("ScanResult", device);
+                }
+            }
         }
-        // 0:lowPower 1:balanced 2:lowLatency -1:opportunistic
-        ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                                                          .build();
-        scanner.startScan(null, settings, mScanCallback);
+    };
+
+    private void startScan() throws IllegalStateException {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothAdapter.startDiscovery();
+//        BluetoothLeScanner scanner = mBluetoothAdapter.getBluetoothLeScanner();
+//        if (scanner == null) {
+//            throw new IllegalStateException("getBluetoothLeScanner() is null. Is the Adapter on?");
+//        }
+//        // 0:lowPower 1:balanced 2:lowLatency -1:opportunistic
+//        ScanSettings settings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+//                                                          .build();
+//        scanner.startScan(null, settings, mScanCallback);
     }
 
     private void stopScan() {
-        BluetoothLeScanner scanner = mBluetoothAdapter.getBluetoothLeScanner();
-        if (scanner != null) {
-            scanner.stopScan(mScanCallback);
-        }
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        bluetoothAdapter.cancelDiscovery();
+        
+//        BluetoothLeScanner scanner = mBluetoothAdapter.getBluetoothLeScanner();
+//        if (scanner != null) {
+//            scanner.stopScan(mScanCallback);
+//        }
     }
 
     private void connect(Result result, Map<String, Object> args) {

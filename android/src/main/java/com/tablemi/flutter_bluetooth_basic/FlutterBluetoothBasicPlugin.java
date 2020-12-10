@@ -74,8 +74,8 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
         stateChannel.setStreamHandler(stateStreamHandler);
 
         // Register for broadcasts when a device is discovered.
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        activity.registerReceiver(receiver, filter);
+//        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+//        activity.registerReceiver(receiver, filter);
     }
 
     @Override

@@ -76,6 +76,7 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
         // Register for broadcasts when a device is discovered.
 //        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
 //        activity.registerReceiver(receiver, filter);
+
     }
 
     @Override
@@ -268,19 +269,19 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
     };
 
     // Create a BroadcastReceiver for ACTION_FOUND.
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Discovery has found a device. Get the BluetoothDevice
-                // object and its info from the Intent.
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if (device != null && device.getName() != null) {
-                    invokeMethodUIThread("ScanResult", device);
-                }
-            }
-        }
-    };
+//    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+//        public void onReceive(Context context, Intent intent) {
+//            String action = intent.getAction();
+//            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+//                // Discovery has found a device. Get the BluetoothDevice
+//                // object and its info from the Intent.
+//                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+//                if (device != null && device.getName() != null) {
+//                    invokeMethodUIThread("ScanResult", device);
+//                }
+//            }
+//        }
+//    };
 
     private void startScan() throws IllegalStateException {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -408,6 +409,13 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
                 } else if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)) {
                     threadPool = null;
                     sink.success(0);
+                } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                    Log.d(TAG, "ACTION_FOUND");
+
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (device != null && device.getName() != null) {
+                        invokeMethodUIThread("ScanResult", device);
+                    }
                 }
             }
         };
@@ -419,6 +427,9 @@ public class FlutterBluetoothBasicPlugin implements MethodCallHandler, RequestPe
             filter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
             filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
             filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+            filter.addAction(BluetoothDevice.ACTION_FOUND);
+            
+
             context.registerReceiver(mReceiver, filter);
         }
 

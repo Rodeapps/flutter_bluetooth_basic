@@ -118,7 +118,9 @@
             self.state = ^(ConnectState state) {
                 [self updateConnectState:state];
             };
-            [Manager connectPeripheral:peripheral options:nil timeout:2 connectBlack: self.state];
+            
+            [[[CBCentralManager alloc] init] connectPeripheral:peripheral options:nil];
+//            [Manager connectPeripheral:peripheral options:nil timeout:2 connectBlack: self.state];
             
             result(nil);
         } @catch(FlutterError *e) {
@@ -156,18 +158,64 @@
 }
 
 -(void)startScan {
-    [Manager scanForPeripheralsWithServices:nil options:nil discover:^(CBPeripheral * _Nullable peripheral, NSDictionary<NSString *,id> * _Nullable advertisementData, NSNumber * _Nullable RSSI) {
-        if (peripheral.name != nil) {
-            
-            NSLog(@"find device -> %@", peripheral.name);
+    if (@available(iOS 5.0, *)) {
+        [[[CBCentralManager alloc] init] scanForPeripheralsWithServices:nil options:nil];
+    } else {
+        // Fallback on earlier versions
+        if (@available(iOS 5.0, *)) {
+            [Manager scanForPeripheralsWithServices:nil options:nil discover:^(CBPeripheral * _Nullable peripheral, NSDictionary<NSString *,id> * _Nullable advertisementData, NSNumber * _Nullable RSSI) {
+                if (peripheral.name != nil) {
+                    
+                    NSLog(@"find device -> %@", peripheral.name);
+                    [self.scannedPeripherals setObject:peripheral forKey:[[peripheral identifier] UUIDString]];
+                    
+                    NSDictionary *device = [NSDictionary dictionaryWithObjectsAndKeys:peripheral.identifier.UUIDString,@"address",peripheral.name,@"name",nil,@"type",nil];
+                    [_channel invokeMethod:@"ScanResult" arguments:device];
+                }
+            }];
+        } else {
+            // Fallback on earlier versions
+        }
+        
+    }
+   
+}
+
+- (void)centralManager:(CBCentralManager *)central
+ didDiscoverPeripheral:(CBPeripheral *)peripheral
+     advertisementData:(NSDictionary *)advertisementData
+                  RSSI:(NSNumber *)RSSI  API_AVAILABLE(ios(5.0)){
+    
+    NSLog(@"scanned and found this peripheral: %@", peripheral);
+    NSLog(@"advertisment data: %@", advertisementData);
+    
+    
+    NSLog(@"\n");
+    NSLog(@"-------------------------------------------");
+    NSLog(@"DC peripheral found!  %@", peripheral);
+    
+    peripheral.delegate = self;
+    if (peripheral.name != nil) {
+        
+        NSLog(@"find device -> %@", peripheral.name);
+        if (@available(iOS 7.0, *)) {
             [self.scannedPeripherals setObject:peripheral forKey:[[peripheral identifier] UUIDString]];
-            
+        } else {
+            // Fallback on earlier versions
+        }
+        
+        if (@available(iOS 7.0, *)) {
             NSDictionary *device = [NSDictionary dictionaryWithObjectsAndKeys:peripheral.identifier.UUIDString,@"address",peripheral.name,@"name",nil,@"type",nil];
             [_channel invokeMethod:@"ScanResult" arguments:device];
+        } else {
+            // Fallback on earlier versions
         }
-    }];
-    
+    }
+    NSLog(@"-------------------------------------------");
+    NSLog(@"\n");
 }
+
+
 
 -(void)updateConnectState:(ConnectState)state {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -196,7 +244,7 @@
         }
         
         NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:ret,@"id",nil];
-        if(_stateStreamHandler.sink != nil) {
+        if(self->_stateStreamHandler.sink != nil) {
             self.stateStreamHandler.sink([dict objectForKey:@"id"]);
         }
     });

@@ -1,11 +1,13 @@
 #import "FlutterBluetoothBasicPlugin.h"
 #import "ConnecterManager.h"
 
+API_AVAILABLE(ios(5.0))
 @interface FlutterBluetoothBasicPlugin ()
 @property(nonatomic, retain) NSObject<FlutterPluginRegistrar> *registrar;
 @property(nonatomic, retain) FlutterMethodChannel *channel;
 @property(nonatomic, retain) BluetoothPrintStreamHandler *stateStreamHandler;
 @property(nonatomic) NSMutableDictionary *scannedPeripherals;
+@property(nonatomic,retain)CBCentralManager *centralManager;
 
 @end
 
@@ -17,6 +19,9 @@
                                      binaryMessenger:[registrar messenger]];
     FlutterEventChannel* stateChannel = [FlutterEventChannel eventChannelWithName:NAMESPACE @"/state" binaryMessenger:[registrar messenger]];
     FlutterBluetoothBasicPlugin* instance = [[FlutterBluetoothBasicPlugin alloc] init];
+    
+    instance.centralManager = [CBCentralManager new];
+    instance.centralManager.delegate = instance;
     
     instance.channel = channel;
     instance.scannedPeripherals = [NSMutableDictionary new];
@@ -119,7 +124,7 @@
                 [self updateConnectState:state];
             };
             
-            [[[CBCentralManager alloc] init] connectPeripheral:peripheral options:nil];
+            [_centralManager connectPeripheral:peripheral options:nil];
 //            [Manager connectPeripheral:peripheral options:nil timeout:2 connectBlack: self.state];
             
             result(nil);
@@ -159,7 +164,7 @@
 
 -(void)startScan {
     if (@available(iOS 5.0, *)) {
-        [[[CBCentralManager alloc] init] scanForPeripheralsWithServices:nil options:nil];
+        [centralManager scanForPeripheralsWithServices:nil options:nil];
     } else {
         // Fallback on earlier versions
         if (@available(iOS 5.0, *)) {
@@ -214,6 +219,11 @@
     NSLog(@"-------------------------------------------");
     NSLog(@"\n");
 }
+
+- (void)centralManagerDidUpdateState:(nonnull CBCentralManager *)central {
+    NSLog(@"-----------centralManagerDidUpdateState----------------------");
+}
+
 
 
 

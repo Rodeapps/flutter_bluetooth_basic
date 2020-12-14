@@ -6,6 +6,7 @@
 
 @interface FlutterBluetoothBasicPlugin : NSObject<FlutterPlugin, CBCentralManagerDelegate, CBPeripheralDelegate>
 @property(nonatomic,copy)ConnectDeviceState state;
+
 @end
 
 @interface BluetoothPrintStreamHandler : NSObject<FlutterStreamHandler>

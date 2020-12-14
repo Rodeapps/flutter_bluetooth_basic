@@ -164,7 +164,7 @@ API_AVAILABLE(ios(5.0))
 
 -(void)startScan {
     if (@available(iOS 5.0, *)) {
-        [centralManager scanForPeripheralsWithServices:nil options:nil];
+        [self.centralManager scanForPeripheralsWithServices:nil options:nil];
     } else {
         // Fallback on earlier versions
         if (@available(iOS 5.0, *)) {
